@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Official ELEVEN NATION Color Palette */
+  --color-brand-bg: #F5F3EE;
+  --color-brand-text: #171717;
+  --color-brand-card: #FFFFFF;
+  --color-brand-muted: #77746D;
+  --color-brand-border: #D8D4CA;
+  --color-brand-beige: #B7B2A7;
+  --color-brand-olive: #8A927A;
+  --color-brand-olive-hover: #788069;
+  --color-brand-success: #42634B;
+  --color-brand-error: #8B2E2E;
+  --color-brand-warning: #A16E3B;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F5F3EE;
+  color: #171717;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6, .font-brand {
+  font-family: var(--font-display);
+}
+
+/* Custom subtle scrollbar in harmony with Warm Off-white & Soft Border */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F3EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8D4CA;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B7B2A7;
+}

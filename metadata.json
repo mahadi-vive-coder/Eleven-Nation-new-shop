@@ -1,0 +1,8 @@
+{
+  "name": "Remix Eleven Nation",
+  "description": "A premium, minimalist e-commerce platform offering modern casual fashion and football jerseys for the Bangladeshi market.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

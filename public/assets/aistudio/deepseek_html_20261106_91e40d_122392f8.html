@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Invoice EN-INV-000001 — ELEVEN NATION</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   ELEVEN NATION — ORDER INVOICE (PREMIUM / RICH PALETTE)
+   bg #EDE8DE | ink #171717 | cream #F7F4EC | white #FFF
+   olive 900 #1E2618 · 800 #2B3527 · 600 #4A5A40
+   sage #8A927A | gold #B08A4A · light #D8BC85
+   muted #77746D | line #E1DBD0
+   ============================================================ */
+
+:root{
+  --bg:         #EDE8DE;
+  --ink:        #171717;
+  --white:      #FFFFFF;
+  --cream:      #F7F4EC;
+  --cream-2:    #FBF9F3;
+  --muted:      #77746D;
+  --line:       #E1DBD0;
+  --olive-900:  #1E2618;
+  --olive-800:  #2B3527;
+  --olive-600:  #4A5A40;
+  --sage:       #8A927A;
+  --gold:       #B08A4A;
+  --gold-light: #D8BC85;
+  --gold-deep:  #8A6A2F;
+  --gold-tint:  rgba(176,138,74,.14);
+  --olive-tint: rgba(74,90,64,.10);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size:13px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  padding:34px 16px 64px;
+}
+
+/* ---------- A4 SHEET ---------- */
+.sheet{
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto;
+  background:var(--white);
+  padding:16mm 15mm 13mm;
+  border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:0 2px 4px rgba(30,38,24,.05), 0 18px 44px rgba(30,38,24,.10);
+}
+
+/* ---------- SLIM BRAND RULE ---------- */
+.brand-rule{
+  display:flex;
+  height:3px;
+  border-radius:999px;
+  overflow:hidden;
+  margin-bottom:22px;
+}
+.brand-rule span:first-child{ flex:0 0 64%; background:var(--olive-800); }
+.brand-rule span:last-child{ flex:1; background:var(--gold); }
+
+/* ---------- MASTHEAD ---------- */
+.masthead{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:28px;
+  padding:26px 28px 24px;
+  border-radius:12px;
+  background:var(--olive-900);
+  border-bottom:2px solid var(--gold);
+  color:var(--cream);
+  overflow:hidden;
+}
+
+.brand{ flex:0 0 auto; }
+
+.logo{
+  font-family:'Manrope', sans-serif;
+  font-weight:800;
+  font-size:27px;
+  line-height:.98;
+  letter-spacing:.17em;
+  text-transform:uppercase;
+  color:var(--cream);
+}
+.logo span{ display:block; }
+
+.tagline{
+  margin-top:12px;
+  font-family:'Manrope', sans-serif;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.26em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+}
+
+.invoice-meta{
+  text-align:right;
+  min-width:246px;
+}
+
+.invoice-meta h1{
+  margin:0 0 14px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(216,188,133,.35);
+  font-family:'Manrope', sans-serif;
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:.26em;
+  text-transform:uppercase;
+  color:var(--cream);
+}
+
+.meta-list{
+  margin:0;
+  display:grid;
+  gap:7px;
+}
+
+.meta-row{
+  display:flex;
+  justify-content:flex-end;
+  align-items:baseline;
+  gap:16px;
+  font-size:12px;
+}
+.meta-row .k{
+  color:rgba(247,244,236,.58);
+  letter-spacing:.02em;
+}
+.meta-row .v{
+  font-weight:500;
+  color:var(--cream);
+  min-width:136px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- SECTIONS ---------- */
+.section{ margin-top:24px; }
+
+.section-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 0 12px;
+  font-family:'Manrope', sans-serif;
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--olive-800);
+}
+.section-title::before{
+  content:"";
+  width:20px;
+  height:2px;
+  border-radius:2px;
+  background:var(--gold);
+  display:block;
+}
+
+/* ---------- INFO CARDS ---------- */
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.card{
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.card-head{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px 18px;
+  background:var(--cream);
+  border-bottom:1px solid var(--line);
+  font-family:'Manrope', sans-serif;
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.17em;
+  text-transform:uppercase;
+  color:var(--olive-800);
+}
+.card-head--gold{ background:var(--gold-tint); border-bottom-color:rgba(176,138,74,.30); }
+.card-head--olive{ background:var(--olive-tint); border-bottom-color:rgba(74,90,64,.22); }
+
+.dot{
+  width:6px;
+  height:6px;
+  border-radius:2px;
+  display:block;
+  flex:0 0 auto;
+}
+.dot--olive{ background:var(--olive-600); }
+.dot--gold{ background:var(--gold); }
+
+.card-body{ padding:12px 18px 14px; }
+
+.kv{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  padding:7px 0;
+  font-size:12.5px;
+}
+.kv + .kv{ border-top:1px solid rgba(225,219,208,.75); }
+.kv .k{ color:var(--muted); flex:0 0 auto; }
+.kv .v{
+  font-weight:500;
+  color:var(--ink);
+  text-align:right;
+  flex:1 1 auto;
+  word-break:break-word;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- ITEMS TABLE ---------- */
+.table-wrap{ width:100%; }
+
+.items{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:12.5px;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.items thead th{
+  background:var(--olive-900);
+  padding:11px 10px;
+  text-align:left;
+  font-family:'Manrope', sans-serif;
+  font-size:8.5px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+  white-space:nowrap;
+}
+.items thead th:first-child{ padding-left:14px; }
+.items thead th:last-child{ padding-right:14px; }
+
+.items tbody td{
+  padding:14px 10px;
+  vertical-align:top;
+  border-bottom:1px solid var(--line);
+}
+.items tbody td:first-child{ padding-left:14px; }
+.items tbody td:last-child{ padding-right:14px; }
+
+.items tbody tr:nth-child(even) td{ background:var(--cream-2); }
+.items tbody tr:last-child td{ border-bottom:0; }
+
+.items .num{ text-align:right; font-variant-numeric:tabular-nums; }
+.items .ctr{ text-align:center; }
+
+.p-name{
+  font-weight:500;
+  font-size:13px;
+  color:var(--ink);
+  letter-spacing:.005em;
+}
+
+.p-custom{
+  margin-top:8px;
+  padding-left:11px;
+  border-left:2px solid var(--gold);
+  display:grid;
+  gap:2px;
+}
+.p-custom span{
+  font-size:10.5px;
+  color:var(--muted);
+  letter-spacing:.015em;
+}
+.p-custom b{
+  font-weight:700;
+  color:var(--olive-800);
+  letter-spacing:.06em;
+}
+
+.sku{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.06em;
+  white-space:nowrap;
+}
+
+.size-cell{ font-weight:700; color:var(--olive-800); }
+.qty-cell{ font-weight:500; font-variant-numeric:tabular-nums; }
+.total-cell{ font-weight:700; }
+
+/* ---------- BOTTOM AREA ---------- */
+.bottom{
+  display:grid;
+  grid-template-columns:1fr 304px;
+  gap:14px;
+  align-items:start;
+  margin-top:16px;
+}
+
+.stack{ display:grid; gap:14px; }
+
+/* ---------- TOTALS ---------- */
+.totals .card-body{ padding:14px 18px 16px; }
+
+.totals .kv{ padding:6px 0; font-size:12.5px; }
+
+.grand{
+  margin-top:14px;
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  border-radius:10px;
+  background:var(--olive-900);
+  border:1px solid var(--olive-900);
+}
+.grand .k{
+  font-family:'Manrope', sans-serif;
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+}
+.grand .v{
+  font-family:'Manrope', sans-serif;
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:.01em;
+  color:var(--white);
+  font-variant-numeric:tabular-nums;
+  line-height:1.1;
+}
+
+/* ---------- BADGE ---------- */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 11px;
+  border-radius:999px;
+  background:var(--gold-tint);
+  border:1px solid rgba(176,138,74,.45);
+  font-family:'Manrope', sans-serif;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--gold-deep);
+  line-height:1.7;
+}
+.badge::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--gold);
+  display:block;
+}
+
+/* ---------- NOTES ---------- */
+.note-text{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.7;
+  margin:0;
+}
+.note-text.empty{ font-style:italic; opacity:.7; }
+
+/* ---------- FOOTER ---------- */
+.footer{
+  margin-top:30px;
+  padding-top:20px;
+  border-top:2px solid var(--gold);
+  text-align:center;
+}
+.footer .thanks{
+  font-family:'Manrope', sans-serif;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--olive-900);
+}
+.footer .identity{
+  margin-top:8px;
+  font-family:'Manrope', sans-serif;
+  font-size:8.5px;
+  font-weight:800;
+  letter-spacing:.34em;
+  text-transform:uppercase;
+  color:var(--gold);
+}
+.footer .site{
+  margin-top:10px;
+  font-size:11px;
+  letter-spacing:.1em;
+  color:var(--muted);
+}
+
+/* ---------- RESPONSIVE SCREEN ---------- */
+@media screen and (max-width: 860px){
+  body{ padding:16px 12px 40px; }
+  .sheet{ width:100%; min-height:0; padding:26px 20px 24px; }
+  .masthead{ flex-direction:column; gap:22px; padding:22px 20px 20px; }
+  .invoice-meta{ text-align:left; min-width:0; width:100%; }
+  .invoice-meta h1{ border-bottom:0; padding-bottom:0; margin-bottom:12px; }
+  .meta-row{ justify-content:flex-start; }
+  .meta-row .v{ min-width:0; text-align:left; }
+  .grid-2, .bottom{ grid-template-columns:1fr; }
+  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .items{ min-width:580px; }
+}
+
+/* ============================================================
+   PRINT — A4 PORTRAIT
+   ============================================================ */
+@page{
+  size: A4 portrait;
+  margin: 13mm;
+}
+
+@media print{
+  html, body{
+    background:#FFFFFF !important;
+    padding:0 !important;
+    margin:0 !important;
+    font-size:12px;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  .sheet{
+    width:auto;
+    min-height:0;
+    margin:0;
+    padding:0;
+    border:0;
+    border-radius:0;
+    box-shadow:none;
+    background:#FFFFFF;
+  }
+
+  .masthead,
+  .items thead th,
+  .grand,
+  .badge,
+  .card-head,
+  .brand-rule span,
+  .footer{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  .brand-rule{ margin-bottom:16px; }
+  .masthead{ padding:20px 22px 18px; }
+  .section{ margin-top:18px; }
+
+  /* page-break safety */
+  .card,
+  .grand,
+  .bottom,
+  .footer{ break-inside:avoid; page-break-inside:avoid; }
+
+  .items tr{ break-inside:avoid; page-break-inside:avoid; }
+
+  thead{ display:table-header-group; }
+  tfoot{ display:table-footer-group; }
+
+  .table-wrap{ overflow:visible !important; }
+  .items{ min-width:0 !important; }
+
+  a{ color:inherit; text-decoration:none; }
+}
+</style>
+</head>
+
+<body>
+
+<main class="sheet" role="document" aria-label="Invoice EN-INV-000001">
+
+  <!-- ===================== SLIM BRAND RULE ===================== -->
+  <div class="brand-rule" aria-hidden="true"><span></span><span></span></div>
+
+  <!-- ========================= MASTHEAD ======================== -->
+  <header class="masthead">
+
+    <div class="brand">
+      <div class="logo" aria-label="Eleven Nation">
+        <span>Eleven</span>
+        <span>Nation</span>
+      </div>
+      <div class="tagline">Wear Your Identity.</div>
+    </div>
+
+    <div class="invoice-meta">
+      <h1>Invoice</h1>
+      <div class="meta-list">
+        <div class="meta-row">
+          <span class="k">Invoice No</span>
+          <span class="v">EN-INV-000001</span>
+        </div>
+        <div class="meta-row">
+          <span class="k">Order No</span>
+          <span class="v">EN-ORD-000001</span>
+        </div>
+        <div class="meta-row">
+          <span class="k">Invoice Date</span>
+          <span class="v">05 November 2026</span>
+        </div>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ================= CUSTOMER / ORDER INFORMATION ============ -->
+  <section class="section" aria-label="Customer and order information">
+    <div class="grid-2">
+
+      <!-- LEFT CARD -->
+      <div class="card">
+        <div class="card-head card-head--olive">
+          <span class="dot dot--olive"></span>Customer Details
+        </div>
+        <div class="card-body">
+          <div class="kv">
+            <span class="k">Customer Name</span>
+            <span class="v">Mahadi Hasan</span>
+          </div>
+          <div class="kv">
+            <span class="k">Phone Number</span>
+            <span class="v">+880 1712 345 678</span>
+          </div>
+          <div class="kv">
+            <span class="k">Email Address</span>
+            <span class="v">mahadi@example.com</span>
+          </div>
+          <div class="kv">
+            <span class="k">Delivery Address</span>
+            <span class="v">House 42, Road 07, Block C, Banani</span>
+          </div>
+          <div class="kv">
+            <span class="k">City / District</span>
+            <span class="v">Dhaka</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT CARD -->
+      <div class="card">
+        <div class="card-head card-head--gold">
+          <span class="dot dot--gold"></span>Order Details
+        </div>
+        <div class="card-body">
+          <div class="kv">
+            <span class="k">Order Number</span>
+            <span class="v">EN-ORD-000001</span>
+          </div>
+          <div class="kv">
+            <span class="k">Order Date</span>
+            <span class="v">05 November 2026</span>
+          </div>
+          <div class="kv">
+            <span class="k">Payment Method</span>
+            <span class="v">Cash on Delivery</span>
+          </div>
+          <div class="kv">
+            <span class="k">Order Status</span>
+            <span class="v">Confirmed</span>
+          </div>
+          <div class="kv">
+            <span class="k">Payment Status</span>
+            <span class="v">Unpaid</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================= PRODUCT TABLE ===================== -->
+  <section class="section" aria-label="Order items">
+    <h2 class="section-title">Order Items</h2>
+
+    <div class="table-wrap">
+      <table class="items">
+        <thead>
+          <tr>
+            <th class="ctr" style="width:6%;">SL</th>
+            <th style="width:34%;">Product Name</th>
+            <th style="width:14%;">SKU</th>
+            <th class="ctr" style="width:8%;">Size</th>
+            <th class="ctr" style="width:8%;">Qty</th>
+            <th class="num" style="width:15%;">Unit Price</th>
+            <th class="num" style="width:15%;">Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- ITEM 01 -->
+          <tr>
+            <td class="ctr">01</td>
+            <td>
+              <div class="p-name">Oversized Essentials Tee</div>
+            </td>
+            <td><span class="sku">EN-TS-001</span></td>
+            <td class="ctr size-cell">L</td>
+            <td class="ctr qty-cell">1</td>
+            <td class="num">৳850</td>
+            <td class="num total-cell">৳850</td>
+          </tr>
+
+          <!-- ITEM 02 — personalised jersey -->
+          <tr>
+            <td class="ctr">02</td>
+            <td>
+              <div class="p-name">Argentina Home Jersey 24/25</div>
+              <div class="p-custom">
+                <span>Custom Name: <b>MAHADI</b></span>
+                <span>Squad Number: <b>10</b></span>
+              </div>
+            </td>
+            <td><span class="sku">EN-FJ-001</span></td>
+            <td class="ctr size-cell">M</td>
+            <td class="ctr qty-cell">1</td>
+            <td class="num">৳2,250</td>
+            <td class="num total-cell">৳2,250</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================== PAYMENT / NOTES / TOTALS =============== -->
+  <section class="bottom" aria-label="Payment summary">
+
+    <!-- LEFT COLUMN -->
+    <div class="stack">
+
+      <!-- PAYMENT INFORMATION -->
+      <div class="card">
+        <div class="card-head card-head--gold">
+          <span class="dot dot--gold"></span>Payment Information
+        </div>
+        <div class="card-body">
+          <div class="kv">
+            <span class="k">Payment Method</span>
+            <span class="v">Cash on Delivery</span>
+          </div>
+          <div class="kv">
+            <span class="k">Payment Status</span>
+            <span class="v"><span class="badge">Unpaid</span></span>
+          </div>
+          <div class="kv">
+            <span class="k">Amount Due</span>
+            <span class="v">৳3,220</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER NOTES (optional) -->
+      <div class="card">
+        <div class="card-head card-head--olive">
+          <span class="dot dot--olive"></span>Order Notes
+        </div>
+        <div class="card-body">
+          <p class="note-text">
+            Please call before delivery. Preferred delivery window:
+            6:00 PM – 9:00 PM.
+          </p>
+          <!-- Empty state example:
+          <p class="note-text empty">No additional notes for this order.</p>
+          -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN — PRICE SUMMARY -->
+    <div class="card totals">
+      <div class="card-head">
+        <span class="dot dot--olive"></span>Price Summary
+      </div>
+      <div class="card-body">
+
+        <div class="kv">
+          <span class="k">Subtotal</span>
+          <span class="v">৳3,100</span>
+        </div>
+        <div class="kv">
+          <span class="k">Discount</span>
+          <span class="v">− ৳200</span>
+        </div>
+        <div class="kv">
+          <span class="k">Delivery Charge</span>
+          <span class="v">৳70</span>
+        </div>
+        <div class="kv">
+          <span class="k">Customization Charge</span>
+          <span class="v">৳250</span>
+        </div>
+
+        <div class="grand">
+          <span class="k">Grand Total</span>
+          <span class="v">৳3,220</span>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =========================== FOOTER ======================== -->
+  <footer class="footer">
+    <div class="thanks">Thank you for shopping with Eleven Nation.</div>
+    <div class="identity">Wear Your Identity.</div>
+    <div class="site">elevennation.shop</div>
+  </footer>
+
+</main>
+
+</body>
+</html>
