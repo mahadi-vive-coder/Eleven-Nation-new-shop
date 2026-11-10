@@ -6,10 +6,15 @@ export const categoryService = {
   async getCategories(): Promise<CategoryMetadata[]> {
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('categories').select('*');
-        if (!error && data && data.length > 0) return data as CategoryMetadata[];
+        const { data, error } = await supabase.from('categories').select('*').order('sort_order', { ascending: true });
+        if (error) {
+          console.error('Supabase categories error:', error);
+          return [];
+        }
+        return (data || []) as CategoryMetadata[];
       } catch (err) {
-        console.warn('Supabase categories fallback:', err);
+        console.error('Supabase categories query exception:', err);
+        return [];
       }
     }
     return DEMO_CATEGORIES;

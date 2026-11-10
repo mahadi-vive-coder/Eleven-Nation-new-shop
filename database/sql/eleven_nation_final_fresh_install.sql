@@ -1275,7 +1275,7 @@ CREATE OR REPLACE FUNCTION public.track_guest_order(
     p_order_number TEXT,
     p_phone TEXT DEFAULT NULL,
     p_guest_access_token TEXT DEFAULT NULL,
-    p_client_ip TEXT DEFAULT '127.0.0.1'
+    p_client_ip TEXT DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1286,6 +1286,8 @@ DECLARE
     v_clean_order_num TEXT;
     v_clean_phone TEXT;
     v_clean_token TEXT;
+    v_headers JSONB;
+    v_resolved_ip TEXT;
     v_ip_hash TEXT;
     v_rate_limit RECORD;
     v_order RECORD;
@@ -1353,7 +1355,21 @@ BEGIN
         RETURN jsonb_build_object('success', FALSE, 'message', 'Please provide either a guest access token or phone number to verify.');
     END IF;
 
-    v_ip_hash := encode(digest(COALESCE(p_client_ip, '127.0.0.1'), 'sha256'), 'hex');
+    -- Resolve trusted IP: PostgREST request headers take precedence to prevent client-spoofing
+    BEGIN
+        v_headers := NULLIF(current_setting('request.headers', true), '')::jsonb;
+        v_resolved_ip := COALESCE(
+            NULLIF(TRIM(v_headers->>'cf-connecting-ip'), ''),
+            NULLIF(TRIM(split_part(v_headers->>'x-forwarded-for', ',', 1)), ''),
+            NULLIF(TRIM(v_headers->>'x-real-ip'), ''),
+            NULLIF(TRIM(p_client_ip), ''),
+            '127.0.0.1'
+        );
+    EXCEPTION WHEN OTHERS THEN
+        v_resolved_ip := COALESCE(NULLIF(TRIM(p_client_ip), ''), '127.0.0.1');
+    END;
+
+    v_ip_hash := encode(digest(v_resolved_ip, 'sha256'), 'hex');
 
     SELECT * INTO v_rate_limit
     FROM public.guest_tracking_rate_limits

@@ -4,6 +4,7 @@ import { ShieldCheck, Truck, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { orderService } from '../services/orderService';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, totals, deliveryDistrict, setDeliveryDistrict, clearCart } = useCart();
@@ -90,7 +91,7 @@ export const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const order = await orderService.createDemoOrder({
+      const order = await orderService.createOrder({
         customerName: fullName.trim(),
         customerPhone: phoneNumber.trim(),
         customerEmail: email.trim() || undefined,
@@ -113,9 +114,9 @@ export const CheckoutPage: React.FC = () => {
 
       // Navigate to confirmation page
       navigate(`/order-confirmation/${order.orderNumber}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Order creation error:', err);
-      setValidationError('An error occurred while creating your order. Please try again.');
+      setValidationError(err?.message || 'An error occurred while creating your order. Please check item availability and try again.');
       setIsSubmitting(false);
     }
   };
@@ -142,16 +143,28 @@ export const CheckoutPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Demo notice banner as instructed */}
-      <div className="bg-[#FAF8F5] border border-[#D8D4CA] rounded-2xl p-4 text-xs text-[#77746D] flex items-start gap-3 shadow-2xs">
-        <AlertCircle className="w-4 h-4 shrink-0 text-[#8A927A] mt-0.5" />
-        <div>
-          <strong className="font-semibold text-[#171717] uppercase tracking-[0.14em] block">Demo Checkout Mode Active</strong>
-          <span className="font-normal leading-relaxed">
-            This prototype records your order into local simulation storage. You will receive an authentic Eleven Nation order reference number and tracking timeline. When Supabase is connected in the next phase, this service will automatically save directly to production database tables.
-          </span>
+      {/* Dynamic Status Banner */}
+      {isSupabaseConfigured ? (
+        <div className="bg-[#FAF8F5] border border-[#D8D4CA] rounded-2xl p-4 text-xs text-[#77746D] flex items-start gap-3 shadow-2xs">
+          <ShieldCheck className="w-4 h-4 shrink-0 text-[#2E7D32] mt-0.5" />
+          <div>
+            <strong className="font-semibold text-[#171717] uppercase tracking-[0.14em] block">Official Cash on Delivery Checkout</strong>
+            <span className="font-normal leading-relaxed">
+              Your order is processed securely with verified live stock reservations, Steadfast courier dispatch integration, and SMS tracking.
+            </span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-[#FAF8F5] border border-[#D8D4CA] rounded-2xl p-4 text-xs text-[#77746D] flex items-start gap-3 shadow-2xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[#8A927A] mt-0.5" />
+          <div>
+            <strong className="font-semibold text-[#171717] uppercase tracking-[0.14em] block">Development Demo Checkout</strong>
+            <span className="font-normal leading-relaxed">
+              Supabase environment variables are currently unconfigured. This order will be recorded to local browser simulation storage. Connect production credentials in .env to place live database orders.
+            </span>
+          </div>
+        </div>
+      )}
 
       {validationError && (
         <div className="p-3.5 bg-[#FAF2F2] border border-[#8B2E2E]/40 text-[#8B2E2E] text-xs font-medium rounded-xl">

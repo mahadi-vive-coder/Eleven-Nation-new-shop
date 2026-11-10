@@ -55,9 +55,10 @@ export const orderService = {
   /**
    * Submit new Cash on Delivery order.
    * If Supabase is configured, executes atomic server-side checkout via place_order_atomic().
-   * Otherwise falls back safely to browser state.
+   * If atomic checkout fails on a configured database, throws a descriptive error and never creates fake orders.
+   * If Supabase is unconfigured (development demo mode), saves to local browser storage.
    */
-  async createDemoOrder(payload: CreateOrderPayload): Promise<Order> {
+  async createOrder(payload: CreateOrderPayload): Promise<Order> {
     const isInsideDhaka = payload.deliveryAddress.district.toLowerCase() === 'dhaka';
     const deliveryZone = isInsideDhaka ? 'inside_dhaka' : 'outside_dhaka';
     const fullStreetAddress = `${payload.deliveryAddress.fullAddress}, ${payload.deliveryAddress.area}, ${payload.deliveryAddress.district}`;
@@ -70,9 +71,9 @@ export const orderService = {
     let finalGrandTotal = payload.grandTotal;
 
     if (isSupabaseConfigured) {
-      // Prepare payload items for database RPC
+      // Map variant ID accurately from cart item
       const rpcItems = payload.items.map((item) => ({
-        variant_id: item.productId, // In full catalog, item.variantId or item.productId
+        variant_id: item.variantId || item.productId,
         quantity: item.quantity,
         custom_name: item.customization?.name,
         custom_number: item.customization?.number,
@@ -96,6 +97,9 @@ export const orderService = {
         finalDeliveryCharge = rpcResult.deliveryCharge ?? finalDeliveryCharge;
         finalDiscount = rpcResult.discountAmount ?? finalDiscount;
         finalGrandTotal = rpcResult.total ?? finalGrandTotal;
+      } else {
+        // Strict production requirement: never silently fake an order when database is configured!
+        throw new Error(rpcResult.error || 'Unable to place order in database. Please check item availability or try again.');
       }
     }
 
@@ -186,6 +190,11 @@ export const orderService = {
     return order;
   },
 
+  // Backwards compatibility alias
+  async createDemoOrder(payload: CreateOrderPayload): Promise<Order> {
+    return this.createOrder(payload);
+  },
+
   /**
    * Look up order by orderNumber with phone verification or guestAccessToken
    */
@@ -204,7 +213,6 @@ export const orderService = {
         const trackingRes = await trackGuestOrder(cleanOrderNumber, {
           phone: cleanPhone || undefined,
           guestAccessToken: cleanToken,
-          clientIp: '127.0.0.1',
         });
         if (trackingRes.success && trackingRes.order) {
           const matchedOrder = this.getStoredOrders().find((o) => o.orderNumber.toUpperCase() === cleanOrderNumber);

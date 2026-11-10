@@ -104,7 +104,7 @@ export async function trackGuestOrder(
     p_order_number: orderNumber.trim(),
     p_phone: options?.phone?.trim() || null,
     p_guest_access_token: options?.guestAccessToken?.trim() || null,
-    p_client_ip: options?.clientIp?.trim() || '127.0.0.1',
+    p_client_ip: options?.clientIp?.trim() || null,
   });
 
   if (error) {
