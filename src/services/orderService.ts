@@ -1,5 +1,5 @@
-import { Order, CartItem } from '../types';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { Order, CartItem, OrderStatus, OrderTimelineStep } from '../types';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { placeOrder } from '../lib/checkout';
 import { trackGuestOrder } from '../lib/guestTracking';
 
@@ -22,6 +22,116 @@ export interface CreateOrderPayload {
   grandTotal: number;
   notes?: string;
   couponCode?: string;
+}
+
+function generateTimeline(
+  statusStr: string,
+  createdAtStr: string,
+  shippedAtStr?: string,
+  deliveredAtStr?: string
+): OrderTimelineStep[] {
+  const normStatus = statusStr.toLowerCase();
+  const createdDate = new Date(createdAtStr).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const isConfirmed = ['confirmed', 'processing', 'shipped', 'delivered'].includes(normStatus);
+  const isProcessing = ['processing', 'shipped', 'delivered'].includes(normStatus);
+  const isShipped = ['shipped', 'delivered'].includes(normStatus);
+  const isDelivered = normStatus === 'delivered';
+
+  return [
+    {
+      status: 'Pending',
+      label: 'Order Received',
+      timestamp: createdDate,
+      description: 'Order placed via Cash on Delivery. Verification pending.',
+      completed: true,
+      current: normStatus === 'pending',
+    },
+    {
+      status: 'Confirmed',
+      label: 'Phone Verification',
+      timestamp: isConfirmed ? 'Verified' : 'Pending verification call',
+      description: 'Customer contact and sizing confirmed.',
+      completed: isConfirmed,
+      current: normStatus === 'confirmed',
+    },
+    {
+      status: 'Processing',
+      label: 'Packing & Quality Control',
+      timestamp: isProcessing ? 'Completed' : 'Estimated 24h',
+      description: 'Preparation, customization printing, and inspection.',
+      completed: isProcessing,
+      current: normStatus === 'processing',
+    },
+    {
+      status: 'Shipped',
+      label: 'Handed to Courier',
+      timestamp: shippedAtStr ? new Date(shippedAtStr).toLocaleDateString('en-GB') : 'Estimated 2-3 business days',
+      description: 'Dispatched via trusted Bangladesh courier service.',
+      completed: isShipped,
+      current: normStatus === 'shipped',
+    },
+    {
+      status: 'Delivered',
+      label: 'Delivered',
+      timestamp: deliveredAtStr ? new Date(deliveredAtStr).toLocaleDateString('en-GB') : 'Upon delivery',
+      description: 'Payment collected at doorstep.',
+      completed: isDelivered,
+      current: isDelivered,
+    },
+  ];
+}
+
+function mapDbOrderToOrder(row: any): Order {
+  const rawStatus = (row.status || 'pending').toLowerCase();
+  const formattedStatus: OrderStatus = (rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)) as OrderStatus;
+
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    customerEmail: row.customer_email || undefined,
+    deliveryAddress: {
+      district: row.delivery_zone === 'inside_dhaka' ? 'Dhaka' : 'Outside Dhaka',
+      area: '',
+      fullAddress: row.shipping_address,
+      instructions: row.customer_note || undefined,
+    },
+    items: Array.isArray(row.items)
+      ? row.items.map((it: any) => ({
+          productId: it.product_id || it.variant_id || it.id,
+          productName: it.product_name || 'Product',
+          productImage: '',
+          size: it.size || 'M',
+          color: it.color || 'Default',
+          variantSku: it.sku || `EN-${it.size}`,
+          customization: it.custom_name
+            ? {
+                name: it.custom_name,
+                number: it.custom_number || '',
+                price: 0,
+              }
+            : undefined,
+          unitPrice: Number(it.unit_price) || 0,
+          quantity: Number(it.quantity) || 1,
+          totalPrice: Number(it.total_price) || 0,
+        }))
+      : [],
+    subtotal: Number(row.subtotal) || 0,
+    deliveryCharge: Number(row.delivery_charge) || 0,
+    discount: Number(row.discount_amount) || 0,
+    grandTotal: Number(row.total) || 0,
+    paymentMethod: 'Cash on Delivery',
+    status: formattedStatus,
+    timeline: generateTimeline(rawStatus, row.created_at, row.shipped_at, row.delivered_at),
+    createdAt: row.created_at,
+    notes: row.customer_note || undefined,
+  };
 }
 
 export const orderService = {
@@ -53,8 +163,37 @@ export const orderService = {
   },
 
   /**
+   * Fetch authenticated customer's order history from PostgreSQL.
+   * Never leaks or mixes orders from other customers (enforced by RLS on public.orders).
+   */
+  async getCustomerOrders(customerId: string): Promise<Order[]> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, items:order_items(*)')
+          .eq('customer_id', customerId)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase getCustomerOrders error:', error);
+          return [];
+        }
+
+        return (data || []).map((row) => mapDbOrderToOrder(row));
+      } catch (err) {
+        console.error('getCustomerOrders exception:', err);
+        return [];
+      }
+    }
+
+    // Local demo mode fallback
+    return this.getStoredOrders();
+  },
+
+  /**
    * Submit new Cash on Delivery order.
-   * If Supabase is configured, executes atomic server-side checkout via place_order_atomic().
+   * If Supabase is configured: executes atomic server-side checkout via place_order_atomic().
    * If atomic checkout fails on a configured database, throws a descriptive error and never creates fake orders.
    * If Supabase is unconfigured (development demo mode), saves to local browser storage.
    */
@@ -71,7 +210,7 @@ export const orderService = {
     let finalGrandTotal = payload.grandTotal;
 
     if (isSupabaseConfigured) {
-      // Map variant ID accurately from cart item
+      // Map variant ID accurately from cart item (preserving variant UUID)
       const rpcItems = payload.items.map((item) => ({
         variant_id: item.variantId || item.productId,
         quantity: item.quantity,
@@ -98,7 +237,7 @@ export const orderService = {
         finalDiscount = rpcResult.discountAmount ?? finalDiscount;
         finalGrandTotal = rpcResult.total ?? finalGrandTotal;
       } else {
-        // Strict production requirement: never silently fake an order when database is configured!
+        // Strict production requirement: never silently fake an order when database is configured
         throw new Error(rpcResult.error || 'Unable to place order in database. Please check item availability or try again.');
       }
     }
@@ -183,9 +322,11 @@ export const orderService = {
       notes: payload.notes,
     };
 
-    const currentOrders = this.getStoredOrders();
-    const updated = [order, ...currentOrders];
-    this.saveOrders(updated);
+    // Cache locally for offline preview in development mode
+    if (!isSupabaseConfigured) {
+      const currentOrders = this.getStoredOrders();
+      this.saveOrders([order, ...currentOrders]);
+    }
 
     return order;
   },
@@ -196,7 +337,9 @@ export const orderService = {
   },
 
   /**
-   * Look up order by orderNumber with phone verification or guestAccessToken
+   * Look up order by orderNumber with phone verification or guestAccessToken.
+   * When Supabase is configured: queries PostgreSQL track_guest_order() RPC directly.
+   * Never falls back to fake local storage orders when connected to Supabase.
    */
   async trackOrder(
     orderNumber: string, 
@@ -207,31 +350,74 @@ export const orderService = {
     const cleanPhone = phone?.trim().replace(/[^0-9]/g, '') || '';
     const cleanToken = guestAccessToken?.trim() || undefined;
 
-    // If Supabase is active, execute server-side rate-limited guest order tracking
-    if (isSupabaseConfigured && (cleanPhone || cleanToken)) {
+    if (isSupabaseConfigured) {
       try {
         const trackingRes = await trackGuestOrder(cleanOrderNumber, {
           phone: cleanPhone || undefined,
           guestAccessToken: cleanToken,
         });
+
         if (trackingRes.success && trackingRes.order) {
-          const matchedOrder = this.getStoredOrders().find((o) => o.orderNumber.toUpperCase() === cleanOrderNumber);
-          if (matchedOrder) {
-            return {
-              order: {
-                ...matchedOrder,
-                status: (trackingRes.order.status.charAt(0).toUpperCase() + trackingRes.order.status.slice(1)) as any,
-              },
-            };
-          }
-        } else if (trackingRes.message) {
-          return { order: null, error: trackingRes.message };
+          const o = trackingRes.order;
+          const rawStatus = (o.status || 'pending').toLowerCase();
+          const formattedStatus: OrderStatus = (rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)) as OrderStatus;
+
+          const order: Order = {
+            id: o.order_number,
+            orderNumber: o.order_number,
+            customerName: o.customer_name,
+            customerPhone: phone || '',
+            deliveryAddress: {
+              district: o.delivery_zone === 'inside_dhaka' ? 'Dhaka' : 'Outside Dhaka',
+              area: '',
+              fullAddress: o.delivery_address,
+            },
+            items: (o.items || []).map((it) => ({
+              productId: it.product_name,
+              productName: it.product_name,
+              productImage: '',
+              size: it.size,
+              color: it.color,
+              variantSku: `${it.product_name}-${it.size}`,
+              customization: it.custom_name
+                ? {
+                    name: it.custom_name,
+                    number: it.custom_number || '',
+                    price: 0,
+                  }
+                : undefined,
+              unitPrice: Number(it.unit_price) || 0,
+              quantity: Number(it.quantity) || 1,
+              totalPrice: Number(it.total_price) || 0,
+            })),
+            subtotal: Number(o.subtotal) || 0,
+            deliveryCharge: Number(o.delivery_charge) || 0,
+            discount: Number(o.discount_amount) || 0,
+            grandTotal: Number(o.total) || 0,
+            paymentMethod: 'Cash on Delivery',
+            status: formattedStatus,
+            timeline: generateTimeline(rawStatus, o.created_at, o.shipped_at, o.delivered_at),
+            createdAt: o.created_at,
+          };
+
+          return { order };
         }
-      } catch (err) {
-        console.warn('Database trackOrder error:', err);
+
+        // Return real error from database RPC
+        return {
+          order: null,
+          error: trackingRes.message || `No order found with reference "${cleanOrderNumber}".`,
+        };
+      } catch (err: any) {
+        console.error('Database trackOrder error:', err);
+        return {
+          order: null,
+          error: err?.message || 'Database tracking request failed. Please check your connection.',
+        };
       }
     }
 
+    // Offline Demo Mode (Only when Supabase environment variables are unset)
     const orders = this.getStoredOrders();
     const matched = orders.find((o) => o.orderNumber.toUpperCase() === cleanOrderNumber);
 

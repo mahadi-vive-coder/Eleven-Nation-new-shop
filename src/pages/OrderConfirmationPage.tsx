@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { CheckCircle, Truck, Package, Clock, Phone, MapPin, ArrowRight, Printer, FileText } from 'lucide-react';
 import { orderService } from '../services/orderService';
@@ -8,6 +8,8 @@ import { InvoiceModal } from '../components/invoice/InvoiceModal';
 
 export const OrderConfirmationPage: React.FC = () => {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const [searchParams] = useSearchParams();
+  const phone = searchParams.get('phone') || '';
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
@@ -27,7 +29,7 @@ export const OrderConfirmationPage: React.FC = () => {
     const fetchOrder = async () => {
       if (!orderNumber) return;
       try {
-        const res = await orderService.trackOrder(orderNumber);
+        const res = await orderService.trackOrder(orderNumber, phone || undefined);
         if (res.order) {
           setOrder(res.order);
         }

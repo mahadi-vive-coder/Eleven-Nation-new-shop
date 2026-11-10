@@ -11,11 +11,12 @@ interface AccountPageProps {
 }
 
 export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' }) => {
-  const { customer, isLoggedIn, logout, updateProfile, addAddress, deleteAddress } = useAuth();
+  const { customer, isLoggedIn, isLoadingSession, isDemoMode, logout, updateProfile, addAddress, deleteAddress } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses'>(initialTab);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileName, setProfileName] = useState('');
@@ -34,6 +35,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
   }, [initialTab]);
 
   useEffect(() => {
+    if (isLoadingSession) return;
+
     if (!isLoggedIn) {
       navigate('/login');
       return;
@@ -44,11 +47,24 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
       setProfilePhone(customer.phone);
       setProfileEmail(customer.email);
 
-      // Load customer orders
-      const allOrders = orderService.getStoredOrders();
-      setOrders(allOrders);
+      // Load authenticated customer's real orders
+      let isMounted = true;
+      setLoadingOrders(true);
+      orderService.getCustomerOrders(customer.id).then((custOrders) => {
+        if (isMounted) {
+          setOrders(custOrders);
+          setLoadingOrders(false);
+        }
+      }).catch((err) => {
+        console.error('Error fetching customer orders:', err);
+        if (isMounted) setLoadingOrders(false);
+      });
+
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [isLoggedIn, customer, navigate]);
+  }, [isLoadingSession, isLoggedIn, customer, navigate]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +91,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
     setNewAddress('');
     setShowAddressModal(false);
   };
+
+  if (isLoadingSession) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#171717] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!customer) return null;
 

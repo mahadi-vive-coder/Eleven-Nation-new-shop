@@ -112,8 +112,8 @@ export const CheckoutPage: React.FC = () => {
       // Clear shopping bag
       clearCart();
 
-      // Navigate to confirmation page
-      navigate(`/order-confirmation/${order.orderNumber}`);
+      // Navigate to confirmation page with phone for verified server retrieval
+      navigate(`/order-confirmation/${order.orderNumber}?phone=${encodeURIComponent(phoneNumber.trim())}`);
     } catch (err: any) {
       console.error('Order creation error:', err);
       setValidationError(err?.message || 'An error occurred while creating your order. Please check item availability and try again.');

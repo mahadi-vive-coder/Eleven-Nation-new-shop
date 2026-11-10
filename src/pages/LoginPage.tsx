@@ -25,8 +25,8 @@ export const LoginPage: React.FC = () => {
     try {
       await login(identifier, password);
       navigate('/account');
-    } catch {
-      setError('Invalid credentials. Please verify your email or phone.');
+    } catch (err: any) {
+      setError(err?.message || 'Invalid credentials. Please verify your email or phone.');
     } finally {
       setLoading(false);
     }

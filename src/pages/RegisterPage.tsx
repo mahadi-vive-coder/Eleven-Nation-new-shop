@@ -27,8 +27,8 @@ export const RegisterPage: React.FC = () => {
     try {
       await register(fullName, email, phone, password);
       navigate('/account');
-    } catch {
-      setError('Registration failed. Please check your information.');
+    } catch (err: any) {
+      setError(err?.message || 'Registration failed. Please check your information.');
     } finally {
       setLoading(false);
     }
