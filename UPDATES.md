@@ -102,13 +102,68 @@ database/
 
 ---
 
-## 5. Next Steps for Dedicated Backend Phase
+## 6. Phase 2: Backend Stabilization & Edge Functions Architecture
 
-1. **Admin Panel Development**:
-   - Construct role-based dashboard for `order_manager` and `super_admin`.
-   - Implement manual & automated courier dispatch controls.
-   - Catalog management (products, categories, banners).
-2. **Edge Functions Deployment**:
-   - Deploy `steadfast-dispatch`, `steadfast-webhook`, and `generate-invoice` via Supabase CLI.
-3. **Storage Setup**:
-   - Confirm buckets `product-images`, `banners`, `invoices`, and `avatars` exist in Supabase Dashboard.
+**Status**: Completed  
+**Deliverables**: Edge Functions Suite, Server Secret Purge, Database Security Audit, Incremental Migration Review, Automated Test Suite
+
+### A. Server Secret Purge from Frontend Bundle (`src/lib/`)
+- Completely removed all server-only modules containing privileged secrets from `src/lib/`:
+  - `src/lib/supabaseAdmin.ts` (deleted)
+  - `src/lib/steadfast.ts` (deleted)
+  - `src/lib/invoiceWorker.ts` (deleted)
+  - `src/lib/invoiceQueue.ts` (deleted)
+  - `src/lib/supabaseServer.ts` (deleted)
+- Verified that all remaining files in `src/lib/` (`checkout.ts`, `guestTracking.ts`, `invoicePdf.ts`, `supabase.ts`) are 100% client-safe and only use public browser credentials (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+
+### B. Supabase Edge Functions Suite (`supabase/functions/`)
+Created complete, isolated Deno/TypeScript edge functions:
+1. `supabase/config.toml`: Configured all functions with project settings and JWT verification.
+2. `supabase/functions/_shared/cors.ts`: Standardized CORS headers and preflight handling.
+3. `supabase/functions/_shared/supabaseClient.ts`: Admin client (service role) and caller-authenticated user client factories.
+4. `supabase/functions/_shared/auth.ts`: Strict JWT role verification querying `public.user_roles` for `super_admin` or `order_manager`.
+5. `supabase/functions/steadfast-dispatch/index.ts`:
+   - Admin-authenticated courier dispatch.
+   - Atomic 5-minute lease claims via `claim_order_for_dispatch()`.
+   - Dispatch to Steadfast API (`/create_order`).
+   - Order finalization via `finalize_order_dispatch()` transitioning order to `shipped`.
+   - Automatic lease release via `release_order_dispatch_claim()` on courier rejection.
+6. `supabase/functions/steadfast-webhook/index.ts`:
+   - Webhook authentication against `STEADFAST_WEBHOOK_SECRET`.
+   - Deduplication in `public.courier_webhook_events`.
+   - Atomic state transitions (`delivered`, `cancelled`, `returned`) via `process_steadfast_webhook()`.
+7. `supabase/functions/invoice-worker/index.ts`:
+   - Asynchronous queue processor claiming jobs with `SELECT ... FOR UPDATE SKIP LOCKED` via `claim_invoice_queue_jobs()`.
+   - Renders branded printable HTML/PDF invoice.
+   - Uploads to private `invoices` storage bucket and completes jobs via `complete_invoice_queue_job()`.
+8. `supabase/functions/admin-operations/index.ts`:
+   - Real-time operational metrics (pending orders, queued invoices, low stock).
+   - Live Steadfast balance check (`/get_balance`).
+   - Routine maintenance invocation (`execute_routine_maintenance()`).
+
+### C. Database Security Audit & `public_product_variants` View Analysis
+- **27 Tables Preserved**: Zero changes to table structure, production data, or existing RLS policies.
+- **17 SECURITY DEFINER Functions Audited**: Confirmed strict `search_path = public, pg_temp`, caller role checks (`service_role`, `super_admin`, or `auth.uid()`), and complete absence of search path hijack vectors.
+- **View Security Model**:
+  - `product_variants` table is protected by RLS (`Variants viewable by product_manager or super_admin`), hiding raw stock numbers from anonymous visitors.
+  - The `public_product_variants` view projects boolean `(stock > 0) AS in_stock`.
+  - In PostgreSQL 15+, setting `security_invoker = true` would evaluate base table RLS against anonymous shoppers, returning 0 rows and immediately breaking the storefront.
+  - Keeping `security_invoker = false` (definer semantics) with `security_barrier = true` is the intentional, secure architecture.
+- **Incremental Reviewed Migration Prepared**:
+  - File: `database/02_SQL_EDITOR_EXECUTION/001_review_public_product_variants_view.sql`
+  - Status: Marked **`[DO NOT RUN YET — REVIEW REQUIRED]`**.
+  - Non-breaking, documented SQL definition prepared for database administrator review.
+
+### D. Testing & Verification
+- **Automated Test Suite**: `tests/backend_stabilization.test.ts`
+  - 8/8 tests passed:
+    1. Zero server-only secrets in `src/lib/`
+    2. All 9 required Edge Function source/config files present
+    3. Migration 001 safety header and definer semantics verified
+    4. Checkout delivery calculation and totals verified
+    5. Guest tracking IP parsing and Cloudflare priority verified
+    6. Edge Function auth RBAC and CORS helpers verified
+    7. Steadfast webhook deduplication and dispatch lease verified
+    8. Invoice queue concurrency logic verified
+- **Audit & Integration Test Suite**: `tests/audit_and_checkout.test.ts` (5/5 passed).
+

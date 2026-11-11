@@ -1,0 +1,17 @@
+# Supabase Project Configuration for Eleven Nation Edge Functions
+project_id = "elevennation"
+
+[api]
+port = 54321
+
+[functions.steadfast-dispatch]
+verify_jwt = true
+
+[functions.steadfast-webhook]
+verify_jwt = false # Webhooks from external Steadfast Courier verified via secret token in body/headers
+
+[functions.invoice-worker]
+verify_jwt = false # Invoked via background cron secret or admin authorization header
+
+[functions.admin-operations]
+verify_jwt = true

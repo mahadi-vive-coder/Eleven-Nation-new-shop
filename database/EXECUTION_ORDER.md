@@ -15,6 +15,7 @@
 | **`[DO NOT RUN — ALREADY APPLIED]`** | This script is already live in your database. Re-running it will cause errors or conflicts. **Leave it untouched.** |
 | **`[DO NOT RUN — FRESH INSTALL ONLY]`** | Meant only for a completely blank database. **Never run on your existing database.** |
 | **`[TEST ONLY — NOT FOR PRODUCTION]`** | Automated test assertions and temporary data. **Never run on production.** |
+| **`[DO NOT RUN YET — REVIEW REQUIRED]`** | Incremental migration prepared for review. **Do NOT run until reviewed and approved.** |
 | **`[OPTIONAL — RUN ONLY WHEN NEEDED]`** | Auxiliary features (e.g. storage buckets). Only execute if explicitly instructed. |
 | **`[VERIFY DATABASE STATE FIRST]`** | Future migration scripts. Must be verified before running. |
 | **`[RUN IN SUPABASE SQL EDITOR]`** | An active, pending migration script. *(None currently pending).* |
@@ -35,7 +36,19 @@
 
 ---
 
-### File 2: Database Test Suite
+### File 2: Incremental Security Review Migration (Phase 2)
+- **Path**: `database/02_SQL_EDITOR_EXECUTION/001_review_public_product_variants_view.sql`
+- **Visual Label**: **`[DO NOT RUN YET — REVIEW REQUIRED]`**
+- **Classification**: **C. PENDING REVIEW — DO NOT RUN WITHOUT APPROVAL**
+- **Purpose**: Formalizes security barrier options and documents PostgreSQL 15+ definer mechanics (`security_invoker = false`) for `public_product_variants` view.
+- **Should It Be Executed?**: **NO.** The existing view is already functioning in the database. This script is provided as a non-breaking incremental definition for database administrator review.
+- **Prerequisites**: Review and approval by technical lead.
+- **Risk Level**: **LOW if executed as written, but UNNECESSARY on initialized database.**
+- **Reason**: The existing initialized database already contains the operational view. Running is optional and should only occur if the database administrator explicitly approves reasserting the view definition.
+
+---
+
+### File 3: Database Test Suite
 - **Path**: `database/04_TESTS/final_fresh_install_test_suite.sql`
 - **Visual Label**: **`[TEST ONLY — NOT FOR PRODUCTION]`**
 - **Classification**: **D. TEST ONLY — NEVER RUN AS PRODUCTION SETUP**
